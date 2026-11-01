@@ -240,14 +240,24 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Step 4: Run the Complete Recommendation & Benchmark Pipeline
+### Step 4: Run the Interactive Recommendation CLI (Non-Technical Friendly)
 ```bash
 python recommend_and_benchmark.py
 ```
-*Outputs generated:*
-- Immediate terminal output for Module 1 (Top-$K$ retrieval) and Module 2 (distance-weighted ranking).
-- Supervised classification metrics and confusion matrix saved to `outputs/supervised_knn_confusion_matrix.png`.
-- Scalability benchmarking runs automatically, saving results to `outputs/latency_benchmark_results.csv` and `outputs/latency_benchmark_scaling.png`.
+*How it works:*
+- **Interactive Prompt:** Type any product SKU (e.g. `SKU_00005` or simply `5`) to get immediate, clean recommendations.
+- **Random Product Test:** Type `random` to instantly test random catalog items.
+- **Browse Categories:** Type `categories` to see available retail categories with sample SKUs.
+- **Run Evaluation Suite:** Type `benchmark` (or use flag `python recommend_and_benchmark.py --benchmark`) to run speed benchmarks and generate diagnostic plots.
+
+**Direct Command-Line Usage:**
+```bash
+# Query a specific product directly:
+python recommend_and_benchmark.py --sku SKU_00005 --top_n 5
+
+# Run automated academic benchmark suite:
+python recommend_and_benchmark.py --benchmark
+```
 
 ### Step 5: Launch the Interactive Jupyter Walkthrough
 ```bash
