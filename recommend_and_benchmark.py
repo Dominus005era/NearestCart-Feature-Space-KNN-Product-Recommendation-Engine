@@ -227,7 +227,7 @@ def run_interactive_cli(recommender):
             print("\nAvailable Categories & Sample SKUs:")
             for cat, group in recommender.df.groupby("product_category"):
                 sample_skus = ", ".join(group["sku_id"].head(3).tolist())
-                print(f"  - {cat:<24}: e.g. {sample_skus}")
+                print(f"  * {cat:<24}: e.g. {sample_skus}")
             continue
 
         if cmd == "benchmark":
