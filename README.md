@@ -185,28 +185,7 @@ NearestCart-Feature-Space-KNN-Product-Recommendation-Engine/
 │   ├── latency_benchmark_scaling.png            <- Latency scaling curves (Brute vs KD vs Ball)
 │   └── supervised_knn_confusion_matrix.png      <- 8-class confusion matrix diagnostic
 │
-├── report/
-│   ├── assets/
-│   │   ├── data_flow_diagram.png                <- DFD Level 0 & Level 1 architecture
-│   │   ├── eda_distributions_and_correlations.png <- 6-panel exploratory data analysis
-│   │   ├── pipeline_architecture_diagram.png    <- ColumnTransformer preprocessing pipeline
-│   │   ├── recommendation_sample_output.png     <- Visual demo recommendation retrieval
-│   │   └── deck/                                <- High-resolution presentation visuals
-│   │       ├── class_f1.png
-│   │       ├── closing_bg.jpeg
-│   │       ├── coldstart_illustration.png
-│   │       ├── confusion_matrix.png
-│   │       ├── cover_bg.jpeg
-│   │       ├── formula_module1.png
-│   │       ├── formula_module2.png
-│   │       ├── latency_scaling.png
-│   │       ├── priority_scores.png
-│   │       └── similarity_curve.png
-│   ├── NearestCart_Feature-Space_KNN_Product_Recommendation_Engine.pptx <- Executive Presentation
-│   ├── NearestCart_ML_Mini_Project_Report.docx  <- Simplified Academic Word Project Report
-│   ├── NearestCart_ML_Mini_Project_Report.md    <- Academic Markdown Report with LaTeX math
-│   ├── NearestCart_ML_Mini_Project_Report_Original.docx <- Comprehensive Original Academic Report
-│   └── Nearest_ML_Mini_Project_Report_Original.docx     <- Original Academic Report (Primary)
+├── report/                                      <- Project reports, presentation deck & visual assets
 │
 ├── .gitignore                                   <- Environment and bytecode ignore rules
 ├── generate_dataset.py                          <- Reproducible dataset generation engine
