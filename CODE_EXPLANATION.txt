@@ -1,52 +1,38 @@
 ================================================================================
 NEARESTCART: CODE EXPLANATION GUIDE (recommend_and_benchmark.py)
-A Line-by-Line & Block-by-Block Beginner Walkthrough in Plain English
+A Medium-Length, Line-by-Line & Block-by-Block Walkthrough in Simple English
 ================================================================================
 
-# Code Explanation Guide: recommend_and_benchmark.py--------------------
-> **A Line-by-Line & Block-by-Block Beginner Walkthrough**  
-> *Everything explained in simple, friendly, and practical English.*
+# NearestCart: Complete Code Explanation Guide
+> **File Walkthrough for recommend_and_benchmark.py**  
+> *Written in simple, clear, and easy-to-understand English with practical explanations of what each block does, why it is needed, and how it works.*
 
 ---
 
-## 1. High-Level Summary: What Does This Code Do?
+## 1. What Is the Goal of This Program?
 
-This script implements **NearestCart**, an e-commerce product recommendation engine.  
-When an online shopper views an item (for example, a smartphone or a pair of running shoes), this program does three key things:
-1. **Reads product attributes** (price, rating, number of reviews, weight, volume) from a catalog of 5,000 products.
-2. **Standardizes the numbers** using $z$-score scaling so expensive prices do not overpower 5-star ratings.
-3. **Finds the mathematically closest items** using K-Nearest Neighbors (KNN) and displays the top recommendations in a clean, easy-to-read table.
+When an online shopper looks at an item on an e-commerce website (like a smartphone, a dress, or a laptop), the website usually suggests similar items below it. 
 
----
+Most traditional systems use **Collaborative Filtering**, which looks at past customer purchases. But if a product is brand new, it has zero clicks and zero purchases—this is called the **Cold-Start Problem**.
 
-## 2. Line-by-Line Breakdown
-
-### Lines 1–13: File Header & Docstring
---- [CODE BLOCK] ---
-"""
-NearestCart: Feature-Space KNN Product Recommendation Engine
-==============================================================
-Project 30: E-Commerce Product Recommendation Prototype
-Assigned Table: catalog_product_attributes
-...
-"""
---------------------
-- **What it does:** This is a Python multiline string (docstring) that acts as the title and project brief. It does not run any calculations; it explains to any reader what the file is about.
+**NearestCart solves this problem using K-Nearest Neighbors (KNN):**
+1. It looks at the product's actual physical and commercial details (price, customer rating, review volume, product weight, and package volume).
+2. It balances those numbers using $z$-score feature scaling so that expensive prices do not drown out customer ratings.
+3. It finds the mathematically closest alternatives in sub-millisecond speeds using a spatial search tree (KD-Tree).
+4. It presents the top recommendations in a clean, user-friendly table showing prices, ratings, and percentage match scores.
 
 ---
 
-### Lines 15–16: Thread Configuration
+## 2. Block-by-Block Code Walkthrough
+
+---
+
+### Block 1: Imports and System Environment Settings (Lines 15–30)
+
 --- [CODE BLOCK] ---
 import os
 os.environ["OMP_NUM_THREADS"] = "1"
---------------------
-- **Line 15 (import os):** Imports Python’s built-in os library, which lets Python talk to the operating system (Windows/Linux/Mac).
-- **Line 16 (os.environ["OMP_NUM_THREADS"] = "1"):** Tells low-level math libraries (OpenMP/NumPy) to use 1 thread for spatial queries. This prevents CPU overhead and keeps speed benchmarks stable and predictable.
 
----
-
-### Lines 18–30: Importing Libraries
---- [CODE BLOCK] ---
 import sys
 import time
 import random
@@ -55,31 +41,33 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
---------------------
-- **sys:** System-specific parameters and functions (like detecting input streams).
-- **time:** Used to measure speed (in milliseconds) during benchmarks.
-- **random:** Used for random number generation.
-- **argparse:** Reads command-line arguments if you run the script with flags like --sku or --benchmark.
-- **numpy (as np):** The standard Python library for fast numeric array calculations.
-- **pandas (as df / pd):** Handles tabular data (like an in-memory Excel spreadsheet or CSV table).
-- **matplotlib.pyplot (as plt):** Used to draw and save plots and graphs.
-- **seaborn (as sns):** A plotting library built on top of Matplotlib that makes charts look clean and modern.
 
---- [CODE BLOCK] ---
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import NearestNeighbors, KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 --------------------
-- **StandardScaler:** Normalizes columns so that all features have a mean of 0 and variance of 1.
-- **NearestNeighbors:** The core unsupervised algorithm that searches for the closest items in multi-dimensional space.
-- **KNeighborsClassifier:** A supervised version of KNN used for category prediction evaluation.
-- **train_test_split:** Splits the dataset into 80% for training and 20% for testing.
-- **classification_report, accuracy_score, confusion_matrix:** Standard evaluation tools to check model accuracy.
+
+#### What this block does:
+* **os.environ["OMP_NUM_THREADS"] = "1":** Sets the number of CPU computation threads to 1. In spatial neighbor searches on single machines, multi-threading adds CPU thread-switching overhead. Locking it to 1 thread makes our speed tests accurate and consistent.
+* **sys:** Lets Python interact with standard system inputs and exits.
+* **time:** Measures high-precision query speeds in milliseconds using time.perf_counter().
+* **random:** Used when testing random catalog products.
+* **argparse:** Reads command-line options so users can pass flags like --sku SKU_00005 or --benchmark.
+* **numpy (as np):** Fast array math library used for calculating distance percentiles, medians, and matrix operations.
+* **pandas (as pd):** The data-table tool. It loads our CSV file into an in-memory table (called a DataFrame) so we can filter and sort rows.
+* **matplotlib.pyplot and seaborn:** Visualization packages that draw our benchmark curves and confusion matrix heatmap.
+* **Scikit-Learn tools:**
+  - StandardScaler: Normalizes numeric columns so they share the same scale.
+  - NearestNeighbors: The spatial indexing algorithm that finds the $k$ closest neighbors.
+  - KNeighborsClassifier: The supervised version used to test how accurately features predict categories.
+  - train_test_split: Divides data into 80% training and 20% testing sets.
+  - classification_report, accuracy_score, confusion_matrix: Calculate precision, recall, and accuracy numbers.
 
 ---
 
-### Lines 32–38: Feature Columns Definition
+### Block 2: Selecting the Feature Columns (Lines 32–38)
+
 --- [CODE BLOCK] ---
 FEATURE_COLS = [
     "unit_price",
@@ -89,26 +77,23 @@ FEATURE_COLS = [
     "package_volume_cm3"
 ]
 --------------------
-- **Why this exists:** These are the **5 continuous numerical columns** that describe each product physically and commercially.
-- We exclude sku_id (an identifier text like SKU_00001) and product_category (text) from distance math.
+
+#### What this block does:
+* Defines the 5 continuous numbers that describe each product:
+  1. unit_price: The retail price in Indian Rupees (INR).
+  2. average_user_rating: The customer satisfaction score (1.0 to 5.0 stars).
+  3. review_volume: How many people reviewed the item (shows popularity).
+  4. product_weight_grams: How heavy the product is.
+  5. package_volume_cm3: The size of the shipping box (Length $\times$ Width $\times$ Height).
+* **Why these 5?** Columns like sku_id (a text ID like SKU_00005) and product_category (text) are labels, not physical measurements. We only do distance math on continuous numerical measurements.
 
 ---
 
-### Lines 40–80: The NearestCartRecommender Class
+### Block 3: The Recommendation Class & Data Setup (Lines 40–80)
 
 --- [CODE BLOCK] ---
 class NearestCartRecommender:
     def __init__(self, data_path, algorithm="kd_tree", metric="euclidean", verbose=False):
---------------------
-- **class NearestCartRecommender:** A blueprint that holds all data and recommendation functions together.
-- **__init__:** The constructor that runs automatically whenever someone creates a recommender object.
-- **Parameters:**
-  - data_path: File path to catalog_product_attributes.csv.
-  - algorithm="kd_tree": Uses a KD-Tree structure for logarithmic fast searches ($\mathcal{O}(D \log N)$).
-  - metric="euclidean": Measures straight-line geometric distance.
-  - verbose=False: Keeps printouts quiet and clean by default.
-
---- [CODE BLOCK] ---
         self.data_path = data_path
         self.algorithm = algorithm
         self.metric = metric
@@ -122,33 +107,21 @@ class NearestCartRecommender:
 
         self._load_and_prepare()
 --------------------
-- Stores settings in instance variables (self....).
-- Creates two empty lookup dictionaries (self.sku_to_idx and self.idx_to_sku) to look up items by name or row number in $\mathcal{O}(1)$ instant time.
-- Calls self._load_and_prepare() to load and index the data.
 
-#### Method _load_and_prepare(self) (Lines 58–80)
+#### What this block does:
+* **class NearestCartRecommender:** Packages all recommendation logic into a reusable class.
+* **__init__:** Runs automatically when the class is initialized. It configures the algorithm (kd_tree for logarithmic searches) and the distance formula (euclidean for straight-line geometric distance).
+* **self.sku_to_idx and self.idx_to_sku:** Two lookup dictionaries. They allow instant lookup of which row number belongs to an SKU ID like SKU_00100 without scanning the whole dataset.
+
+#### Inside _load_and_prepare(self) (Lines 58–80):
 --- [CODE BLOCK] ---
     def _load_and_prepare(self):
         self.df = pd.read_csv(self.data_path)
---------------------
-- **pd.read_csv:** Loads the 5,000 product rows from disk into memory as a DataFrame.
-
---- [CODE BLOCK] ---
         self.sku_to_idx = {sku: idx for idx, sku in enumerate(self.df["sku_id"])}
         self.idx_to_sku = {idx: sku for idx, sku in enumerate(self.df["sku_id"])}
---------------------
-- Builds dictionary maps: given "SKU_00005", it tells us it is row number 4.
 
---- [CODE BLOCK] ---
         self.scaled_features = self.scaler.fit_transform(self.df[FEATURE_COLS])
---------------------
-- **The most crucial step in KNN:**  
-  If we didn’t scale, unit_price (up to Rs. 90,000) would completely overpower average_user_rating (1 to 5).  
-  fit_transform computes the mean ($\mu$) and standard deviation ($\sigma$) of each column and scales every value:
-  $$z = \frac{x - \mu}{\sigma}$$
-  Now, every feature has equal say in distance calculations!
 
---- [CODE BLOCK] ---
         self.model = NearestNeighbors(
             n_neighbors=25,
             algorithm=self.algorithm,
@@ -156,120 +129,122 @@ class NearestCartRecommender:
         )
         self.model.fit(self.scaled_features)
 --------------------
-- Creates the Scikit-Learn NearestNeighbors model and fits it with our 5D scaled data. The KD-Tree index is now built and ready in memory.
+* **Step 1 (Load CSV):** Loads catalog_product_attributes.csv into self.df.
+* **Step 2 (Feature Scaling):** Calls self.scaler.fit_transform(self.df[FEATURE_COLS]).  
+  *Why is this necessary?* Price can be Rs. 50,000, while ratings are only between 1 and 5. Without scaling, a difference of Rs. 100 would completely overwhelm a 2-star rating difference. StandardScaler shifts each column to have a mean of 0 and a standard deviation of 1.
+* **Step 3 (Build Spatial Index):** Creates and fits the Scikit-Learn NearestNeighbors model on the scaled data. It builds a KD-Tree in memory, organizing data into binary partitions so searches run in fractions of a millisecond.
 
 ---
 
-### Lines 82–134: Module 1 — recommend() Method
+### Block 4: Module 1 — Retrieving Top-N Nearest Neighbors (Lines 82–134)
+
 --- [CODE BLOCK] ---
     def recommend(self, query_sku_id, top_n=5, filter_same_category=True):
 --------------------
-- Takes a target SKU (e.g. "5" or "SKU_00005"), the number of recommendations wanted (top_n=5), and category filter preference.
 
---- [CODE BLOCK] ---
-        clean_sku = query_sku_id.strip().upper()
-        if not clean_sku.startswith("SKU_"):
-            if clean_sku.isdigit():
-                clean_sku = f"SKU_{int(clean_sku):05d}"
---------------------
-- **User-friendly shortcut:** If a user types 5, it automatically converts it to SKU_00005. If they type sku_00042, it converts it to SKU_00042.
+#### What this block does:
+This is the core retrieval function that finds the most similar products.
 
---- [CODE BLOCK] ---
-        if clean_sku not in self.sku_to_idx:
-            raise ValueError(...)
---------------------
-- Checks if the product exists in the catalog. If not, it raises a helpful error message.
+1. **Input Cleanup (Lines 87–93):**
+   --- [CODE BLOCK] ---
+   clean_sku = query_sku_id.strip().upper()
+   if not clean_sku.startswith("SKU_"):
+       if clean_sku.isdigit():
+           clean_sku = f"SKU_{int(clean_sku):05d}"
+   --------------------
+   * Makes the input flexible. If a user enters 5, it automatically expands it to SKU_00005. If the SKU does not exist, it stops gracefully and prints an error message.
 
---- [CODE BLOCK] ---
-        query_idx = self.sku_to_idx[clean_sku]
-        query_row = self.df.iloc[query_idx]
-        query_vec = self.scaled_features[query_idx].reshape(1, -1)
---------------------
-- Retrieves the target product’s row and converts its 5 scaled attributes into a 2D array of shape (1, 5).
+2. **Fetching the Target Product Vector (Lines 95–97):**
+   --- [CODE BLOCK] ---
+   query_idx = self.sku_to_idx[clean_sku]
+   query_row = self.df.iloc[query_idx]
+   query_vec = self.scaled_features[query_idx].reshape(1, -1)
+   --------------------
+   * Finds the exact row index of the product and extracts its 5 standardized values as a 2D vector for the algorithm.
 
---- [CODE BLOCK] ---
-        n_candidates = min(len(self.df), max(top_n * 50, 250) if filter_same_category else top_n + 1)
-        distances, indices = self.model.kneighbors(query_vec, n_neighbors=n_candidates)
---------------------
-- **model.kneighbors(...):** Asks the KD-Tree: *"Find the items closest to this vector."* It returns their distance numbers and row indices in fractions of a millisecond.
+3. **Querying the KD-Tree (Lines 100–105):**
+   --- [CODE BLOCK] ---
+   n_candidates = min(len(self.df), max(top_n * 50, 250) if filter_same_category else top_n + 1)
+   distances, indices = self.model.kneighbors(query_vec, n_neighbors=n_candidates)
+   --------------------
+   * Asks the KD-Tree to retrieve the closest neighboring points. We ask for a candidate pool of 250 neighbors so that even after filtering for the same category, we easily find 5 matching items.
 
---- [CODE BLOCK] ---
-        for dist, idx in zip(distances, indices):
-            if idx == query_idx:
-                continue  # Skip the query product itself
-            
-            cand_row = self.df.iloc[idx]
-            if filter_same_category and cand_row["product_category"] != query_row["product_category"]:
-                continue  # Only recommend items from the same category
---------------------
-- Loops through candidates. Skips recommending the product to itself, and filters out different categories (e.g., won't recommend a t-shirt when viewing a laptop).
+4. **Category Filtering and Similarity Calculation (Lines 107–130):**
+   --- [CODE BLOCK] ---
+   for dist, idx in zip(distances, indices):
+       if idx == query_idx:
+           continue  # Don't recommend the item to itself
+       cand_row = self.df.iloc[idx]
+       if filter_same_category and cand_row["product_category"] != query_row["product_category"]:
+           continue  # Keep recommendations relevant to the department
 
---- [CODE BLOCK] ---
-            similarity_pct = (1.0 / (1.0 + dist)) * 100.0
---------------------
-- **Bounded Similarity Formula:**  
-  Raw Euclidean distance ($d$) goes from 0 to infinity. To convert distance into an easy-to-understand percentage:
-  $$\text{Similarity \%} = \frac{1}{1 + d} \times 100$$
-  - If distance $d = 0$, similarity is $100\%$.
-  - If distance $d = 1$, similarity is $50\%$.
+       similarity_pct = (1.0 / (1.0 + dist)) * 100.0
+   --------------------
+   * **The Similarity Formula in Plain English:**  
+     Raw Euclidean distance starts at 0 and can go up to infinity. Normal shoppers find raw distance numbers confusing.  
+     We convert distance to a clean percentage:
+     $$\text{Similarity \%} = \frac{1}{1 + \text{distance}} \times 100$$
+     - If distance is 0 (identical item), similarity is 100%.
+     - As distance grows, similarity drops smoothly toward 0%.
 
---- [CODE BLOCK] ---
-        res_df = pd.DataFrame(results)
-        res_df["rank"] = range(1, len(res_df) + 1)
-        return query_row, res_df
---------------------
-- Packages the results into a clean Pandas DataFrame with ranks 1 to 5, and returns the target product and recommendations.
+5. **Packaging Output:** Returns the target product details and a DataFrame of the top 5 closest items.
 
 ---
 
-### Lines 136–160: Module 2 — distance_weighted_ranking() Method
+### Block 5: Module 2 — Reciprocal Distance-Weighted Ranking (Lines 136–160)
+
 --- [CODE BLOCK] ---
     def distance_weighted_ranking(self, rec_df, epsilon=1e-5):
---------------------
-- In basic KNN, all 5 neighbors are treated as equal. But an item with distance $0.10$ is much closer than an item with distance $0.25$.
-- This function gives **more mathematical weight to closer items**.
-
---- [CODE BLOCK] ---
+        df_ranked = rec_df.copy()
         raw_weights = 1.0 / (df_ranked["euclidean_distance"] + epsilon)
         norm_weights = raw_weights / raw_weights.sum()
---------------------
-- **Inverse Distance Weighting formula:**
-  $$w_i = \frac{1}{d_i + \epsilon}$$
-  ($\epsilon = 0.00001$ prevents dividing by zero if distance is 0).
-- Then normalizes the weights so they sum to 1.0: $W_i = \frac{w_i}{\sum w_j}$.
 
---- [CODE BLOCK] ---
+        df_ranked["raw_weight"] = raw_weights.round(4)
+        df_ranked["normalized_weight"] = norm_weights.round(4)
+
         reputation_score = df_ranked["average_user_rating"] * 20.0
         n_items = len(df_ranked)
         df_ranked["weighted_priority_score"] = (
             (0.70 * df_ranked["similarity_score_pct"] + 0.30 * reputation_score)
             * norm_weights * n_items
         ).round(2)
+
+        df_ranked = df_ranked.sort_values(by="weighted_priority_score", ascending=False).reset_index(drop=True)
+        df_ranked["weighted_rank"] = range(1, len(df_ranked) + 1)
+        return df_ranked
 --------------------
-- **Composite Priority Score:**
-  - $70\%$ emphasis on feature closeness (Similarity Score).
-  - $30\%$ emphasis on customer satisfaction (Rating $\times 20$, converting a 5-star rating into a 100-point scale).
-  - Multiplied by normalized distance weight ($W_i \times N$).
-- Items are sorted in descending order of priority score.
+
+#### What this block does and why it is needed:
+* **The Problem:** Standard KNN treats all top-5 neighbors as equally important. But an item with a tiny distance of 0.1 is much closer to what the customer wants than an item with distance 0.3.
+* **Step 1 (Inverse Weighting):**  
+  raw_weights = 1.0 / (distance + epsilon).  
+  Weight is simply 1 divided by distance ($\epsilon = 0.00001$ ensures we never divide by zero). Closer items get huge weights; farther items get tiny weights.
+* **Step 2 (Normalize Weights):**  
+  norm_weights = raw_weights / sum(raw_weights).  
+  Makes all candidate weights add up to 1.0.
+* **Step 3 (Composite Priority Score):**  
+  We blend 70% of feature similarity with 30% customer reputation (rating $\times 20$, turning a 5-star rating into a 100-point scale), multiplied by the closeness weight:
+  $$\text{Priority Score} = (0.70 \times \text{Similarity} + 0.30 \times \text{Rating Score}) \times \text{Weight} \times K$$
+* **Result:** The closest, highest-rated item gets pushed to the very top. In our demo, Candidate 1 earns a priority score of 135.31, more than double Candidate 5 (60.63).
 
 ---
 
-### Lines 161–192: display_clean_recommendations()--------------------
+### Block 6: Displaying Minimal Recommendations (Lines 161–192)
+
 --- [CODE BLOCK] ---
 def display_clean_recommendations(query_product, rec_df, top_n=5):
 --------------------
-- **Why this function exists:** To present output that anyone (including non-technical users or professors) can read immediately.
-- Prints a clear header showing the target product name, price, rating, and review count.
-- Prints a clean table:
-  text
-  #   | SKU ID     | Category         | Price (INR)    | Rating     | Match       
-  1   | SKU_03413  | Electronics      | Rs. 13,467.30  | 4.2 / 5.0  | 90% Match (Best)
-  --------------------
-- Formats currency with commas (Rs. 13,467.30) and ratings out of 5.0 (4.2 / 5.0).
+
+#### What this block does:
+* Formats recommendation results into a clean, human-friendly presentation table.
+* **Target Summary:** Prints the target product SKU, category, price formatted with currency commas (Rs. 13,728.60), star rating (4.3 / 5.0), and review volume.
+* **Recommendations Table:** Displays 6 clean columns: Rank (#), SKU ID, Category, Price (INR), Rating, and Match % (with a (Best) tag next to rank 1).
+* **Why it matters:** It strips away all technical noise (raw coordinates, inverse weight fractions, package volume in cm³) so a store manager, buyer, or examiner sees only clear, actionable information.
 
 ---
 
-### Lines 194–226: Minimalist Interactive CLI (run_interactive_cli)
+### Block 7: The Minimalist Interactive CLI Loop (Lines 194–226)
+
 --- [CODE BLOCK] ---
 def run_interactive_cli(recommender):
     print("\n" + "="*50)
@@ -278,75 +253,113 @@ def run_interactive_cli(recommender):
     print("Enter a Product Number or SKU to get recommendations.")
     print("Type 'exit' to quit.")
     print("="*50)
---------------------
-- Prints a clean, uncluttered banner. No technical options, no commands to memorize.
 
---- [CODE BLOCK] ---
     while True:
-        user_input = input("\nEnter Product (e.g. 5 or SKU_00005): ").strip()
-        if user_input.lower() in ["exit", "quit", "q"]:
+        try:
+            user_input = input("\nEnter Product (e.g. 5 or SKU_00005): ").strip()
+        except (KeyboardInterrupt, EOFError):
+            print("\nExiting. Thank you!")
             break
         ...
 --------------------
-- Enters an ongoing loop waiting for user input.
-- If the user types exit or q, it stops cleanly.
-- When the user enters a number or SKU, it calls recommend(), ranks the results with distance_weighted_ranking(), and displays the clean table immediately!
-- If an invalid input is entered, it catches ValueError and displays a simple error without crashing.
+
+#### What this block does:
+* Provides an ongoing interactive terminal prompt.
+* **How it works:**
+  - Prints a simple header.
+  - Waits for user input via input().
+  - If the user types exit or q, the loop breaks cleanly.
+  - When the user enters a number or SKU ID, it calls recommend() followed by distance_weighted_ranking() and prints the clean table.
+  - If an invalid ID is typed, it catches the error and informs the user without crashing.
 
 ---
 
-### Lines 228–276: Module 3 — run_latency_benchmark()--------------------
+### Block 8: Module 3 — Latency & Scalability Benchmarking (Lines 228–301)
+
 --- [CODE BLOCK] ---
 def run_latency_benchmark(catalog_sizes=[1000, 5000, 10000, 25000, 50000], n_queries=50):
 --------------------
-- **What this evaluates:** How fast does KNN search run when the catalog grows from 1,000 to 50,000 products?
-- Compares three algorithms:
-  1. **brute:** Checks every item one-by-one ($\mathcal{O}(N \cdot D)$). Slows down as catalog grows.
-  2. **kd_tree:** Splits feature space into a binary search tree ($\mathcal{O}(D \log N)$). Stays ultra-fast (~0.23 ms).
-  3. **ball_tree:** Groups points into nested hyperspheres.
-- Uses time.perf_counter() to record median latency and 95th-percentile tail latency.
-- Automatically saves outputs/latency_benchmark_results.csv and draws outputs/latency_benchmark_scaling.png.
+
+#### What this block does:
+* **The Question:** Will this search engine slow down when our store adds thousands of new products?
+* **How it tests:**
+  - Evaluates catalogs across 5 scales: 1,000, 5,000, 10,000, 25,000, and 50,000 products.
+  - Runs 50 random test queries at each catalog size.
+  - Compares 3 algorithms:
+    1. **Brute Force (brute):** Checks every single catalog item sequentially ($\mathcal{O}(N \cdot D)$).
+    2. **KD-Tree (kd_tree):** Organizes points into a binary space-partitioning tree ($\mathcal{O}(D \log N)$).
+    3. **Ball-Tree (ball_tree):** Organizes points into nested multidimensional spheres.
+* **Results & Visuals:**
+  - Measures index build time, median query latency, and 95th-percentile tail latency.
+  - Saves the results table to outputs/latency_benchmark_results.csv.
+  - Uses Matplotlib to plot latency scaling curves and saves them to outputs/latency_benchmark_scaling.png.
+* **Key Finding:** As the catalog expanded 50 times (from 1k to 50k), brute-force latency increased by over 460%, while KD-Tree latency stayed practically flat at **~0.24 milliseconds**, proving it is ready for production.
 
 ---
 
-### Lines 278–315: Extension — run_supervised_knn()--------------------
+### Block 9: Extension — Supervised KNN Category Classification (Lines 303–340)
+
 --- [CODE BLOCK] ---
 def run_supervised_knn(df):
 --------------------
-- Demonstrates supervised classification using KNeighborsClassifier.
-- It tests: *"Can KNN correctly predict a product's category just by looking at its 5 physical/price features?"*
-- Uses an 80:20 stratified split (train_test_split) and prints accuracy and F1-scores.
-- Generates and saves an 8-class confusion matrix heatmap to outputs/supervised_knn_confusion_matrix.png.
+
+#### What this block does:
+* **The Question:** Do these 5 physical features actually separate products into meaningful retail departments?
+* **How it tests:**
+  - Uses StandardScaler on all 5 features.
+  - Splits the data into 80% training and 20% holdout test sets using stratified sampling (train_test_split).
+  - Trains a KNeighborsClassifier(n_neighbors=7, weights="distance").
+  - Predicts the category of the 1,000 unseen test products.
+* **Diagnostic Confusion Matrix:**
+  - Computes confusion_matrix(y_test, y_pred).
+  - Draws an 8-class heatmap with Seaborn and saves it to outputs/supervised_knn_confusion_matrix.png.
+* **Key Finding:** Achieves **61.7% accuracy** (compared to 18.6% for random guessing). Furniture reaches an F1-score of 0.97 because heavy weight and large volume form a clean, isolated cluster.
 
 ---
 
-### Lines 317–352: main() — Program Entry Point
---- [CODE BLOCK] ---
-def main():
-    parser = argparse.ArgumentParser(...)
-    parser.add_argument("--sku", ...)
-    parser.add_argument("--benchmark", action="store_true", ...)
-    ...
---------------------
-- Sets up command-line arguments.
-- Initializes the NearestCartRecommender.
-- **Default behavior:** If you run python recommend_and_benchmark.py without extra flags, it starts the clean, minimal interactive CLI.
-- If an evaluator runs python recommend_and_benchmark.py --benchmark, it triggers the automated benchmarking suite.
+### Block 10: Program Entry Point & CLI Arguments (Lines 342–374)
 
 --- [CODE BLOCK] ---
+def main():
+    parser = argparse.ArgumentParser(description="NearestCart: KNN Product Recommendation Engine")
+    parser.add_argument("--sku", type=str, default=None, help="Query specific SKU directly")
+    parser.add_argument("--top_n", type=int, default=5, help="Number of recommendations")
+    parser.add_argument("--benchmark", action="store_true", help="Run full automated benchmark suite")
+    parser.add_argument("--demo", action="store_true", help="Run quick non-interactive demo")
+    args = parser.parse_args()
+
+    data_path = os.path.join("data", "catalog_product_attributes.csv")
+    recommender = NearestCartRecommender(data_path=data_path, algorithm="kd_tree", verbose=False)
+
+    if args.benchmark:
+        run_supervised_knn(recommender.df)
+        run_latency_benchmark(...)
+        return
+    ...
+    run_interactive_cli(recommender)
+
 if __name__ == "__main__":
     main()
 --------------------
-- Standard Python idiom: ensures main() only runs when the script is executed directly from the terminal (not when imported as a module).
+
+#### What this block does:
+* **Command-line flexibility:**
+  - If executed with --benchmark, it runs the speed tests and saves the charts.
+  - If executed with --sku SKU_00005, it directly outputs recommendations for that item.
+  - **Default:** If executed with no flags (python recommend_and_benchmark.py), it starts the clean, interactive prompt for the user.
+* **if __name__ == "__main__":** Standard Python practice ensuring main() runs only when the file is executed directly, not when imported by another script.
 
 ---
 
-## 3. Quick Reference: Why Each Concept Was Chosen
+## 3. Quick Summary Table
 
-| Concept / Tool | Plain English Reason |
-| :--- | :--- |
-| **StandardScaler** | Equalizes scales so a Rs. 50,000 price doesn't drown out a 4.5 rating. |
-| **Euclidean Distance** | Standard straight-line distance in 5D geometry (Pythagorean theorem). |
-| **KD-Tree Indexing** | Avoids scanning all 5,000 items sequentially; provides logarithmic sub-millisecond lookups. |
-| **Inverse Weighting** | Prioritizes closer products over farther neighbors instead of treating all top-$K$ items equally. |
-| **Minimal CLI Loop** | Lets non-technical users or examiners type simple numbers (e.g. 5 or SKU_00005) and get instant answers. |
+| Code Component | What It Does | Why It Is Important |
+| :--- | :--- | :--- |
+| **StandardScaler** | Normalizes all 5 continuous features | Stops high rupee prices from drowning out 5-star ratings. |
+| **NearestNeighbors (kd_tree)** | Organizes data into spatial trees | Enables sub-millisecond neighbor lookups ($\mathcal{O}(D \log N)$). |
+| **recommend()** | Finds the 5 closest same-category items | Core recommendation retrieval step (Module 1). |
+| **1.0 / (1.0 + distance) * 100** | Converts distance to percentage | Gives normal shoppers an intuitive 0–100% match score. |
+| **distance_weighted_ranking()** | Applies inverse distance weighting | Pushes the closest and highest-rated products to rank #1. |
+| **run_interactive_cli()** | Simple terminal input loop | Lets anyone type a simple number (like 5) and get instant recommendations. |
+| **run_latency_benchmark()** | Compares Brute Force vs. KD-Tree | Scientifically proves that search stays fast up to 50,000 items. |
+| **run_supervised_knn()** | 8-class category classification | Proves physical attributes carry genuine retail category signals. |
