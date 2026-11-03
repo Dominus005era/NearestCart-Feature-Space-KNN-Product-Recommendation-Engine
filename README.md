@@ -188,6 +188,7 @@ NearestCart-Feature-Space-KNN-Product-Recommendation-Engine/
 ├── report/                                      <- Project reports, presentation deck & visual assets
 │
 ├── .gitignore                                   <- Environment and bytecode ignore rules
+├── CODE_EXPLANATION.md                          <- Detailed line-by-line beginner code explanation
 ├── generate_dataset.py                          <- Reproducible dataset generation engine
 ├── project_walkthrough.ipynb                    <- Interactive Jupyter Notebook walkthrough
 ├── recommend_and_benchmark.py                   <- Production Python execution script
@@ -219,15 +220,13 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Step 4: Run the Interactive Recommendation CLI (Non-Technical Friendly)
+### Step 4: Run the Recommendation CLI
 ```bash
 python recommend_and_benchmark.py
 ```
 *How it works:*
-- **Interactive Prompt:** Type any product SKU (e.g. `SKU_00005` or simply `5`) to get immediate, clean recommendations.
-- **Random Product Test:** Type `random` to instantly test random catalog items.
-- **Browse Categories:** Type `categories` to see available retail categories with sample SKUs.
-- **Run Evaluation Suite:** Type `benchmark` (or use flag `python recommend_and_benchmark.py --benchmark`) to run speed benchmarks and generate diagnostic plots.
+- **Minimalist Prompt:** Simply enter a product number (e.g. `5` or `SKU_00005`) to instantly see the top 5 recommended alternatives with prices, ratings, and match percentages.
+- **Exit:** Type `exit` to quit.
 
 **Direct Command-Line Usage:**
 ```bash

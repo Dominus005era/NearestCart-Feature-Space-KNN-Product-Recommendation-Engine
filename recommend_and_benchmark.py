@@ -193,58 +193,32 @@ def display_clean_recommendations(query_product, rec_df, top_n=5):
 
 def run_interactive_cli(recommender):
     """
-    Interactive, user-friendly prompt loop.
+    Minimal, user-friendly prompt loop.
+    Accepts SKU ID or simply the number (e.g. 'SKU_00005' or '5').
     """
-    print("\n" + "="*70)
-    print("       NearestCart Product Recommendation Engine")
-    print("       Interactive User Query Mode")
-    print("="*70)
-    print("Ready! 5,000 products loaded across 8 retail categories.")
-    print("Commands:")
-    print("  - Type an SKU ID (e.g., 'SKU_00005' or just '5')")
-    print("  - Type 'random' to test a random product")
-    print("  - Type 'categories' to see sample products by category")
-    print("  - Type 'benchmark' to run technical evaluation suite")
-    print("  - Type 'exit' or 'quit' to close")
-    print("="*70)
+    print("\n" + "="*50)
+    print("    NearestCart Product Recommendation System")
+    print("="*50)
+    print("Enter a Product Number or SKU to get recommendations.")
+    print("Type 'exit' to quit.")
+    print("="*50)
 
     while True:
         try:
-            user_input = input("\nEnter Product SKU (or 'random' / 'exit'): ").strip()
+            user_input = input("\nEnter Product (e.g. 5 or SKU_00005): ").strip()
         except (KeyboardInterrupt, EOFError):
-            print("\nExiting. Thank you for using NearestCart!")
+            print("\nExiting. Thank you!")
             break
 
         if not user_input:
             continue
 
-        cmd = user_input.lower()
-        if cmd in ["exit", "quit", "q"]:
-            print("Exiting. Thank you for using NearestCart!")
+        if user_input.lower() in ["exit", "quit", "q"]:
+            print("Exiting. Thank you!")
             break
 
-        if cmd == "categories":
-            print("\nAvailable Categories & Sample SKUs:")
-            for cat, group in recommender.df.groupby("product_category"):
-                sample_skus = ", ".join(group["sku_id"].head(3).tolist())
-                print(f"  * {cat:<24}: e.g. {sample_skus}")
-            continue
-
-        if cmd == "benchmark":
-            print("\nStarting full technical benchmark...")
-            run_supervised_knn(recommender.df)
-            run_latency_benchmark(catalog_sizes=[1000, 5000, 10000, 25000, 50000], n_queries=50)
-            print("\nBenchmark complete! Charts saved to outputs/ folder.")
-            continue
-
-        if cmd == "random":
-            rand_idx = random.randint(0, len(recommender.df) - 1)
-            target_sku = recommender.df.iloc[rand_idx]["sku_id"]
-        else:
-            target_sku = user_input
-
         try:
-            query_product, top_recs = recommender.recommend(target_sku, top_n=5, filter_same_category=True)
+            query_product, top_recs = recommender.recommend(user_input, top_n=5, filter_same_category=True)
             weighted_recs = recommender.distance_weighted_ranking(top_recs)
             display_clean_recommendations(query_product, weighted_recs, top_n=5)
         except ValueError as err:
