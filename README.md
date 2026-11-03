@@ -189,7 +189,6 @@ NearestCart-Feature-Space-KNN-Product-Recommendation-Engine/
 │
 ├── .gitignore                                   <- Environment and bytecode ignore rules
 ├── CODE_EXPLANATION.md                          <- Detailed line-by-line beginner code explanation
-├── generate_dataset.py                          <- Reproducible dataset generation engine
 ├── project_walkthrough.ipynb                    <- Interactive Jupyter Notebook walkthrough
 ├── recommend_and_benchmark.py                   <- Production Python execution script
 ├── requirements.txt                             <- Python package dependencies
